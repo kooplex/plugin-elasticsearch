@@ -1,0 +1,59 @@
+version: '2.2'
+services:
+  ##PREFIX##-elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.8.0
+    container_name: ##PREFIX##-elasticsearch
+    environment:
+#      - node.name=es01
+#      - cluster.name=es-docker-cluster
+#      - discovery.seed_hosts=es02,es03
+#      - cluster.initial_master_nodes=es01,es02,es03
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - ##PREFIX##-elasticsearch-data:/usr/share/elasticsearch/data
+    ports:
+      - 9100:9200
+      - 9101:9300
+    networks:
+      - ##PREFIX##-net
+      - ##PREFIX##-elastic
+
+  ##PREFIX##-kibana:
+    image: docker.elastic.co/kibana/kibana:7.8.0
+    container_name: ##PREFIX##-kibana
+    environment:
+#      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+     - server.host=##OUTERHOST##
+     - server.name=##PREFIX##-kibana
+     - server.basePath=/kibana
+     - elasticsearch.hosts=[elastic:9200]
+    links:
+      - ##PREFIX##-elasticsearch
+#    volumes:
+#      - ##PREFIX##-elasticsearch-data:/usr/share/elasticsearch/data
+    ports:
+      - 5601:5601
+    networks:
+      - ##PREFIX##-net
+      - ##PREFIX##-elastic
+
+volumes:
+  ##PREFIX##-elasticsearch-data:
+    external: true
+  ##PREFIX##-elasticsearch-conf:
+    external: true
+  ##PREFIX##-elasticsearch-log:
+    external: true
+
+networks:
+  ##PREFIX##-net:
+    external: true
+  ##PREFIX##-elastic:
+    driver: bridge
+    external: false
